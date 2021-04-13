@@ -1,0 +1,28 @@
+{
+  "name": "easyqueue",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": {
+    "name": "@srgaba Gabriel Oliveira",
+    "email": "gabadesenvolvedor@gmail.com"
+  },
+  "scripts": {
+    "dev": "nodemon ./example/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "nodemon": "^2.0.7",
+    "p-queue": "^7.1.0",
+    "sucrase": "^3.17.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.14",
+    "@babel/core": "^7.13.14",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/preset-typescript": "^7.13.0",
+    "@types/node": "^14.14.37",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  }
+}
