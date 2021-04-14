@@ -23,7 +23,7 @@ function Queue(options) {
 }
 inherits(Queue, EventEmmiter);
 
-function add(cb, id) {
+function add(cb, id, priority = 0) {
   this.queue++;
   const job = new Job(cb, id || this.queue);
   if (!this.head) {
@@ -34,39 +34,54 @@ function add(cb, id) {
     const checker = setInterval(() => {
       if (cachePendding === this.queue) {
         clearInterval(checker);
-        this.exec(job.cb, job.id);
+        this.exec();
       } else {
         cachePendding = this.queue;
       }
     }, 1);
+  } else if (priority > 0) {
+    let currentJob = this.head;
+    let lastJob;
+    while (priority < currentJob.priority) {
+      lastJob = currentJob;
+      currentJob = currentJob.next;
+    }
+    job.next = currentJob;
+    if (lastJob) {
+      lastJob.next = job;
+    } else {
+      job.next = currentJob;
+      this.head = job;
+    }
   } else {
     this.tail.next = job;
     this.tail = job;
   }
 }
 
-function exec(cb, id) {
+function exec() {
+  const job = this.head;
   this.pending = true;
-  if (Array.isArray(cb)) {
-    return Promise.all(cb.map((fc) => fc()))
+  if (Array.isArray(job.cb)) {
+    return Promise.all(job.cb.map((fc) => fc()))
       .then(() => {
-        this.next(id);
+        this.next(job.id);
       })
-      .catch((err) => this.next(id, err));
+      .catch((err) => this.next(job.id, err));
   }
   try {
-    const exec = cb();
+    const exec = job.cb();
     if (exec instanceof Promise) {
       exec
         .then(() => {
-          this.next(id);
+          this.next(job.id);
         })
-        .catch((err) => this.next(id, err));
+        .catch((err) => this.next(job.id, err));
     } else {
-      this.next(id);
+      this.next(job.id);
     }
   } catch (err) {
-    this.next(id, err);
+    this.next(job.id, err);
   }
 }
 
@@ -78,17 +93,15 @@ function next(id, err) {
   if (!this.head.next) {
     this.head = null;
     this.tail = null;
+    this.emit('finish');
     return;
   }
   this.head = this.head.next;
   if (this.stopped) return;
   if (this.options.interval) {
-    setTimeout(
-      () => this.exec(this.head.cb, this.head.id),
-      this.options.interval
-    );
+    setTimeout(() => this.exec(), this.options.interval);
   } else {
-    this.exec(this.head.cb, this.head.id);
+    this.exec();
   }
 }
 
