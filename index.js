@@ -24,7 +24,7 @@ function Queue(options) {
 }
 inherits(Queue, EventEmmiter);
 
-function add(cb, id, priority = 0) {
+function add(cb, id = null, priority = 0) {
   this.queue++;
   const job = new Job(cb, id || this.queue, priority);
   if (!this.head) {
@@ -43,7 +43,7 @@ function add(cb, id, priority = 0) {
   } else if (priority > 0) {
     let currentJob = this.head;
     let lastJob;
-    while (priority < currentJob.priority) {
+    while (currentJob && priority < currentJob.priority) {
       lastJob = currentJob;
       currentJob = currentJob.next;
     }
