@@ -1,10 +1,11 @@
 const EventEmmiter = require('events').EventEmitter;
 const inherits = require('util').inherits;
 
-function Job(cb, id) {
-  this.next = null;
+function Job(cb, id, priority) {
   this.cb = cb;
   this.id = id;
+  this.priority = priority;
+  this.next = null;
 }
 
 function Queue(options) {
@@ -25,7 +26,7 @@ inherits(Queue, EventEmmiter);
 
 function add(cb, id, priority = 0) {
   this.queue++;
-  const job = new Job(cb, id || this.queue);
+  const job = new Job(cb, id || this.queue, priority);
   if (!this.head) {
     this.pending = true;
     this.head = job;
@@ -65,30 +66,30 @@ function exec() {
   if (Array.isArray(job.cb)) {
     return Promise.all(job.cb.map((fc) => fc()))
       .then(() => {
-        this.next(job.id);
+        this.next(job);
       })
-      .catch((err) => this.next(job.id, err));
+      .catch((err) => this.next(job, err));
   }
   try {
     const exec = job.cb();
     if (exec instanceof Promise) {
       exec
         .then(() => {
-          this.next(job.id);
+          this.next(job);
         })
-        .catch((err) => this.next(job.id, err));
+        .catch((err) => this.next(job, err));
     } else {
-      this.next(job.id);
+      this.next(job);
     }
   } catch (err) {
-    this.next(job.id, err);
+    this.next(job, err);
   }
 }
 
-function next(id, err) {
+function next(job, err) {
   this.pending = false;
-  if (err) this.emit('error', err, id);
-  else this.emit('success', id);
+  if (err) this.emit('error', err, job.id);
+  else this.emit('success', job.id);
   this.queue--;
   if (!this.head.next) {
     this.head = null;
