@@ -21,6 +21,7 @@ function Queue(options) {
   this.exec = exec.bind(this);
   this.stop = stop.bind(this);
   this.start = start.bind(this);
+  this.del = del.bind(this)
 }
 inherits(Queue, EventEmmiter);
 
@@ -106,6 +107,18 @@ function next(job, err) {
   }
 }
 
+function del(id){
+  if(!this.head) return;
+  let currentJob = this.head;
+  while(currentJob){
+    let next = currentJob.next;
+    if(next?.id === id){
+      return currentJob.next = next.next
+    }
+    currentJob = currentJob.next
+  }
+}
+
 function stop() {
   this.stopped = true;
 }
@@ -115,7 +128,5 @@ function start() {
   this.stopped = false;
   if (!this.pending) this.exec(this.head.cb, this.head.id);
 }
-
-// function
 
 module.exports = Queue;

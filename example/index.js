@@ -9,7 +9,7 @@ queue.on('finish', () => {
 queue.add(async () => {
   console.log('Queue Promise<<<<<<<<<<<<');
   await (() =>
-    new Promise((resolve, reject) => {
+    new Promise((resolve, rj) => {
       setTimeout(() => resolve(null), 7000);
     }))();
   console.log('Queue Promise Finished');
@@ -24,11 +24,12 @@ queue.add(() => {
   for (let i = 0; i < 1000000000; i++) {}
   console.log('Queue Looping2 Finished');
 });
+queue.del(7)
 queue.add(() => {
   console.log('Queue Looping3');
   for (let i = 0; i < 1000000000; i++) {}
   console.log('Queue Looping3 Finished');
-});
+}, 7);
 
 // queue.on('success', (args) => {
 //   console.log(args);
